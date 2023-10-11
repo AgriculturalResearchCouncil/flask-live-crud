@@ -1,6 +1,7 @@
 from flask import Flask, request,jsonify,make_response
 from flask_sqlalchemy import SQLAlchemy
 from os import environ
+from urllib import parse
 
 #init app
 app = Flask(__name__)
@@ -8,7 +9,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('DB_URL')"""
 #local app
 username = 'postgres'
-password = '@Rc.)))))'
+password = parse.quote('@Rc.)))))')
 database = 'arcapitest'
 
 app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{username}:{password}@localhost:5432/{database}"
@@ -31,9 +32,12 @@ class User(db.Model):
 
 #routes
 #create a test route
-app.route('/test',methods=['GET'])
+@app.route('/status',methods=['GET'])
 def test():
-    return make_response(jsonify({'message':'test route'}),200)
+    try:
+        return make_response(jsonify({'status':'OK'}),200)
+    except  Exception as e:
+        return make_response(jsonify({'status':'error'}),500)
 
 #create a user
 @app.route('/user',methods=['POST'])
@@ -46,7 +50,7 @@ def create_user():
         return make_response(jsonify({'message':'user created'}),201)
     
     except  Exception as e:
-        return make_response(jsonify({'message':'error user created'}),500)
+        return make_response(jsonify({'message':'error user not created' + str(e)}),500)
     
 #get all users
 @app.route('/users',methods=['GET'])
@@ -59,7 +63,7 @@ def get_users():
         return make_response(jsonify({'message':'error getting users'}),500)
 
 #get user by id
-@app.route('/users/<int:id>',methods='GET')
+@app.route('/users/<int:id>',methods=['GET'])
 def get_user(id):
     try:
         user = User.query.filter_by(id=id).first()
@@ -71,7 +75,7 @@ def get_user(id):
         return make_response(jsonify({'message':'error getting user'}),500)
 
 #update a user
-@app.route('/users/<int:id>', method=['PUT'])
+@app.route('/users/<int:id>', methods=['PUT'])
 def update_user(id):
     try:
         
@@ -88,7 +92,7 @@ def update_user(id):
          return make_response(jsonify({'message':'error updating user'}),500)
 
 #delete a user
-@app.route('/users/<int:id>', method=['DELETE'])
+@app.route('/users/<int:id>', methods=['DELETE'])
 def delete_user(id):
     try:
         user = User.query.filter_by(id=id).first()
