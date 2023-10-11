@@ -2,11 +2,20 @@ from flask import Flask, request,jsonify,make_response
 from flask_sqlalchemy import SQLAlchemy
 from os import environ
 
-
+#init app
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('DB_URL')
+"""#docker app
+app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('DB_URL')"""
+#local app
+username = 'postgres'
+password = '@Rc.)))))'
+database = 'arcapitest'
+
+app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{username}:{password}@localhost:5432/{database}"
+
 db =SQLAlchemy(app)
 
+#models
 class User(db.Model):
     __tablename__='users'
     id = db.Column(db.Integer,primary_key=True)
@@ -19,9 +28,8 @@ class User(db.Model):
     
     def json(self):
         return {'id':self.id, 'username':self.username, 'email':self.email}
-    
-db.create_all()
 
+#routes
 #create a test route
 app.route('/test',methods=['GET'])
 def test():
@@ -94,6 +102,15 @@ def delete_user(id):
          return make_response(jsonify({'message':'error deleting user'}),500)
          pass
 
+if __name__ == '__main__':
+    #create db if it doesnt exist    
+    with app.app_context():
+
+        db.create_all()
+        db.session.commit()
+    
+    #run the app
+    app.run(host='127.0.0.1', port=5050)
 
 
     
