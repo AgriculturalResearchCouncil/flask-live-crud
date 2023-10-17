@@ -17,18 +17,20 @@ app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{username}:{password}@loc
 db =SQLAlchemy(app)
 
 #models
-class User(db.Model):
-    __tablename__='users'
+class Station(db.Model):
+    __tablename__='stations'
     id = db.Column(db.Integer,primary_key=True)
-    username= db.Column(db.String(80),unique=True,nullable=False)
-    email= db.Column(db.String(120),unique=True,nullable=False)
+    compno= db.Column(db.String(80),unique=True,nullable=False)
+    weathervar= db.Column(db.String(120),nullable=False)
+    val= db.Column(db.Float,nullable=False)
 
-    def __init__(self,username,email):
-        self.username = username
-        self.email = email
+    def __init__(self,compno,weathervar,val):
+        self.compno = compno
+        self.weathervar = weathervar
+        self.val = val
     
     def json(self):
-        return {'id':self.id, 'username':self.username, 'email':self.email}
+        return {'id':self.id, 'compno':self.compno, 'weathervar':self.weathervar, 'val':self.val}
 
 #routes
 #create a test route
@@ -39,71 +41,72 @@ def test():
     except  Exception as e:
         return make_response(jsonify({'status':'error'}),500)
 
-#create a user
-@app.route('/user',methods=['POST'])
-def create_user():
+#create a station
+@app.route('/station',methods=['POST'])
+def create_station():
     try:
         data = request.get_json()
-        new_user = User(username=data['username'],email=data['email'])
-        db.session.add(new_user)
+        new_station = Station(compno=data['compno'],weathervar=data['weathervar'],val=data['val'])
+        db.session.add(new_station)
         db.session.commit()
-        return make_response(jsonify({'message':'user created'}),201)
+        return make_response(jsonify({'message':'station created'}),201)
     
     except  Exception as e:
-        return make_response(jsonify({'message':'error user not created' + str(e)}),500)
+        return make_response(jsonify({'message':'error station not created' + str(e)}),500)
     
-#get all users
-@app.route('/users',methods=['GET'])
-def get_users():
+#get all stations
+@app.route('/stations',methods=['GET'])
+def get_stations():
     try:
-        users = User.query.all()
-        return make_response(jsonify({'users': [user.json() for user in users]}),200)
+        stations = Station.query.all()
+        return make_response(jsonify({'stations': [station.json() for station in stations]}),200)
 
     except Exception as e:
-        return make_response(jsonify({'message':'error getting users'}),500)
+        return make_response(jsonify({'message':'error getting stations'}),500)
 
-#get user by id
-@app.route('/users/<int:id>',methods=['GET'])
-def get_user(id):
+#get station by id
+@app.route('/stations/<int:id>',methods=['GET'])
+def get_station(id):
     try:
-        user = User.query.filter_by(id=id).first()
-        if user:
-            return make_response(jsonify({'user': user.json()}),200)
-        return make_response(jsonify({'message': 'user mot found'}),404)
+        station = Station.query.filter_by(id=id).first()
+        if station:
+            return make_response(jsonify({'station': station.json()}),200)
+        return make_response(jsonify({'message': 'station not found'}),404)
 
     except Exception as e:
-        return make_response(jsonify({'message':'error getting user'}),500)
+        return make_response(jsonify({'message':'error getting station'}),500)
 
-#update a user
-@app.route('/users/<int:id>', methods=['PUT'])
-def update_user(id):
+#update a station
+@app.route('/stations/<int:id>', methods=['PUT'])
+def update_station(id):
     try:
         
-        user = User.query.filter_by(id=id).first()
-        if user:
+        station = Station.query.filter_by(id=id).first()
+        if station:
             data = request.get_json()
-            user.username = data['username']
-            user.email = data['email']
+            station.compno = data['compno']
+            station.weathervar = data['weathervar']
+            station.val = data['val']
             db.session.commit()
-            return make_response(jsonify({'message': 'user updated'}),200)
-        return make_response(jsonify({'message': 'user mot found'}),404)
+            return make_response(jsonify({'message': 'station updated'}),200)
+        return make_response(jsonify({'message': 'station not found'}),404)
     
     except Exception as e:
-         return make_response(jsonify({'message':'error updating user'}),500)
+         return make_response(jsonify({'message':'error updating station'}),500)
 
-#delete a user
-@app.route('/users/<int:id>', methods=['DELETE'])
-def delete_user(id):
+#delete a station
+@app.route('/stations/<int:id>', methods=['DELETE'])
+def delete_station(id):
     try:
-        user = User.query.filter_by(id=id).first()
-        if user:
-            db.session.delete(user)
+        station = Station.query.filter_by(id=id).first()
+        if station:
+            db.session.delete(station)
             db.session.commit()
-            return make_response(jsonify({'message': 'user deleted'}),200)
-        return make_response(jsonify({'message': 'user mot found'}),404)
+            return make_response(jsonify({'message': 'station deleted'}),200)
+        return make_response(jsonify({'message': 'station not found'}),404)
     
     except Exception as e:
-         return make_response(jsonify({'message':'error deleting user'}),500)
+         return make_response(jsonify({'message':'error deleting station'}),500)
          pass
 
 if __name__ == '__main__':
